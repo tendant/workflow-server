@@ -46,7 +46,7 @@ func main() {
 	http.HandleFunc("/action", actionHandler)
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/registerCallback", callbackHandler)
-	_ = http.ListenAndServe(":8099", nil)
+	_ = http.ListenAndServe("localhost:8099", nil)
 }
 
 func listHandler(w http.ResponseWriter, _ *http.Request) {

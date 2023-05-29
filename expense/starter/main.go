@@ -7,7 +7,7 @@ import (
 	"github.com/pborman/uuid"
 	"go.temporal.io/sdk/client"
 
-	"github.com/temporalio/samples-go/expense"
+	"github.com/tendant/workflow-server/expense"
 )
 
 func main() {
