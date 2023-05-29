@@ -18,11 +18,14 @@ https://docs.temporal.io/dev-guide/go/foundations#run-a-development-server
 ```
 go run expense/server/main.go
 ```
+
+Check server status: http://localhost:8099
+
 * Start workflow and activity workers
 ```
 go run expense/worker/main.go
 ```
-* Start expanse workflow execution
+* Start a new expanse workflow execution
 ```
 go run expense/starter/main.go
 ```    
