@@ -3,7 +3,7 @@ objects = main
 all: $(objects)
 
 $(objects):
-	go build -ldflags $(LDFLAGS)  -o $@ $@.go
+	go build -o $@ $@.go
 
 dep:
 	go mod tidy
