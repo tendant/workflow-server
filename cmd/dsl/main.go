@@ -12,6 +12,7 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed parsing workflow")
 	}
-	log.Info().Any("workflow", workflow).Msg("workflow")
+	log.Info().Msg("Workflow info:")
+	log.Info().Str("Start state", workflow.Start.StateName).Send()
 
 }
