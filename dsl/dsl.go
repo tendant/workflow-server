@@ -11,6 +11,8 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+const DSLWorkflowTaskQueue = "DSL_WORKFLOW_TASK_QUEUE"
+
 type DSLWorkflowArgs struct {
 	ExpenseId string
 }
