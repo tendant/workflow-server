@@ -24,7 +24,7 @@ func main() {
 	}
 
 	// Start the Workflow
-	args := &dsl.DSLWorkflowArgs{
+	args := dsl.DSLWorkflowArgs{
 		ExpenseId: "first",
 	}
 	we, err := c.ExecuteWorkflow(context.Background(), options, dsl.DSLWorkflow, args)
@@ -33,16 +33,16 @@ func main() {
 	}
 
 	// Get the results
-	var greeting string
-	err = we.Get(context.Background(), &greeting)
+	var wf string
+	err = we.Get(context.Background(), &wf)
 	if err != nil {
 		log.Fatalln("unable to get Workflow result", err)
 	}
 
-	printResults(greeting, we.GetID(), we.GetRunID())
+	printResults(wf, we.GetID(), we.GetRunID())
 }
 
-func printResults(greeting string, workflowID, runID string) {
+func printResults(result string, workflowID, runID string) {
 	fmt.Printf("\nWorkflowID: %s RunID: %s\n", workflowID, runID)
-	fmt.Printf("\n%s\n\n", greeting)
+	fmt.Printf("\n%s\n\n", result)
 }

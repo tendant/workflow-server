@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/serverlessworkflow/sdk-go/v2/model"
 	"github.com/serverlessworkflow/sdk-go/v2/parser"
 	"go.temporal.io/sdk/workflow"
@@ -51,8 +52,46 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	ctx = workflow.WithActivityOptions(ctx, options)
 
 	var result string
-
+	// Step 1
+	log.Info().Msg("Step 1")
 	err := workflow.ExecuteActivity(ctx, ApprovalActivity, args).Get(ctx, &result)
+	if err != nil {
+		return "", err
+	}
+	switch result {
+	case "Declined":
+		log.Info().Msgf("Workflow completed. ExpenseStatus: %s.\n", result)
+		return "", nil
+	case "Approved":
+		log.Info().Msgf("Continue Workflow. ExpenseStatus: %s.\n", result)
+	default:
+		// Error
+		log.Warn().Msgf("Incorrect status of ApprovelActivity: %s.\n", result)
+	}
 
-	return result, err
+	// step, wait for the expense report to be approved (or rejected)
+	ao := workflow.ActivityOptions{
+		StartToCloseTimeout: 10 * time.Minute,
+	}
+	ctx2 := workflow.WithActivityOptions(ctx, ao)
+	var status string
+	// Step 2
+	log.Info().Msg("Step 2")
+	err = workflow.ExecuteActivity(ctx2, ApprovalActivity, args).Get(ctx2, &status)
+	if err != nil {
+		return "", err
+	}
+	switch status {
+	case "Declined":
+		log.Info().Msgf("Workflow completed. ExpenseStatus: %s.\n", status)
+		return "", nil
+	case "Approved":
+		log.Info().Msgf("Continue Workflow. ExpenseStatus: %s.\n", status)
+	default:
+		// Error
+		log.Warn().Msgf("Incorrect status of ApprovelActivity: %s.\n", status)
+	}
+
+	return "Completed", nil
+
 }
