@@ -12,6 +12,9 @@ https://docs.temporal.io/dev-guide/go/foundations#run-a-development-server
     curl -sSf https://temporal.download/cli.sh | sh
     temporal server start-dev
     
+temporal web ui: http://localhost:8233
+temporal openapi: http://localhost:8233/openapi
+    
 # Run Expense example
 
 * Start the dummy server 

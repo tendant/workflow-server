@@ -46,7 +46,7 @@ func GetStartingWorkflowState(workflow *model.Workflow) (model.State, error) {
 
 func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	options := workflow.ActivityOptions{
-		StartToCloseTimeout: time.Minute * 5,
+		StartToCloseTimeout: 10 * time.Minute,
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
