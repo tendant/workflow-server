@@ -53,7 +53,7 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 
 	var result string
 	// Step 1
-	log.Info().Msg("Step 1")
+	log.Info().Msg("Step 11111")
 	err := workflow.ExecuteActivity(ctx, ApprovalActivity, args).Get(ctx, &result)
 	if err != nil {
 		return "", err
@@ -76,7 +76,7 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	ctx2 := workflow.WithActivityOptions(ctx, ao)
 	var status string
 	// Step 2
-	log.Info().Msg("Step 2")
+	log.Info().Msg("Step 2222")
 	err = workflow.ExecuteActivity(ctx2, ApprovalActivity, args).Get(ctx2, &status)
 	if err != nil {
 		return "", err
