@@ -30,6 +30,11 @@ func ParseWorkflow(filePath string) (*model.Workflow, error) {
 	return workflow, nil
 }
 
+func ParseWorkflowDSL(dslStr string) (*model.Workflow, error) {
+	workflow, err := parser.FromYAMLSource([]byte(dslStr))
+	return workflow, err
+}
+
 func GetWorkflowStateByName(name string, workflow *model.Workflow) (model.State, error) {
 	// start := workflow.Start.StateName
 	if strings.TrimSpace(name) == "" {
@@ -48,6 +53,10 @@ func GetStartingWorkflowState(workflow *model.Workflow) (model.State, error) {
 	return GetWorkflowStateByName(start, workflow)
 }
 
+func ExecuteDSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *model.Workflow) (string, error) {
+	return "Completed", nil
+}
+
 func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Minute,
@@ -55,47 +64,14 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 
 	ctx = workflow.WithActivityOptions(ctx, options)
 
-	var result string
-	// Step 1
-	slog.Info("Step 11111")
-	err := workflow.ExecuteActivity(ctx, ApprovalActivity, args).Get(ctx, &result)
+	slog.Info("Parsing Workflow DSL")
+	dslWorkflow, err := ParseWorkflowDSL(args.DSLStr)
 	if err != nil {
+		slog.Error("Failed Parse Workflow DSL", "DSLStr", args.DSLStr)
 		return "", err
 	}
-	switch result {
-	case "Declined":
-		slog.Info("Workflow completed.", "ExpenseStatus", result)
-		return "", nil
-	case "Approved":
-		slog.Info("Continue Workflow.", "ExpenseStatus", result)
-	default:
-		// Error
-		slog.Warn("Incorrect status of", "ApprovelActivity", result)
-	}
 
-	// step, wait for the expense report to be approved (or rejected)
-	ao := workflow.ActivityOptions{
-		StartToCloseTimeout: 10 * time.Minute,
-	}
-	ctx2 := workflow.WithActivityOptions(ctx, ao)
-	var status string
-	// Step 2
-	slog.Info("Step 2222")
-	err = workflow.ExecuteActivity(ctx2, ApprovalActivity, args).Get(ctx2, &status)
-	if err != nil {
-		return "", err
-	}
-	switch status {
-	case "Declined":
-		slog.Info("Workflow completed.", "ExpenseStatus", status)
-		return "", nil
-	case "Approved":
-		slog.Info("Continue Workflow.", "ExpenseStatus", status)
-	default:
-		// Error
-		slog.Warn("Incorrect status of ApprovelActivity.", "ApprovelActivity", status)
-	}
-
-	return "Completed", nil
+	slog.Info("Start Executing DSL Workflow")
+	return ExecuteDSLWorkflow(ctx, args, dslWorkflow)
 
 }
