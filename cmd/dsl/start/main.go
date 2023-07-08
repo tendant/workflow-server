@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/tendant/workflow-server/dsl"
 	"go.temporal.io/sdk/client"
@@ -17,17 +19,32 @@ func main() {
 	}
 	defer c.Close()
 
+	filename := "./samples/bankingtransactions.yaml"
+	dslStr, err := os.ReadFile(filename)
+	if err != nil {
+		slog.Error("Failed reading workflow DSL from file.", "file", filename)
+		os.Exit(-1)
+	}
+	wfType := "tx"
+	entityType := "bankingtransaction"
+	entityId := "1"
+	id := fmt.Sprintf("%s-%s-%s", wfType, entityType, entityId)
+	args := dsl.DSLWorkflowArgs{
+		Id:         id,
+		Type:       wfType,
+		EntityType: entityType,
+		EntityId:   entityId,
+		DSLStr:     string(dslStr),
+	}
+
+	slog.Info("exeucte workflow")
+	// Start the Workflow
 	options := client.StartWorkflowOptions{
-		ID:        "dsl-workflow",
+		ID:        id,
 		TaskQueue: dsl.DSLWorkflowTaskQueue,
 	}
-	slog.Info("workflow options:")
+	slog.Info("workflow options:", "options", options)
 
-	// Start the Workflow
-	args := dsl.DSLWorkflowArgs{
-		ExpenseId: "first",
-	}
-	slog.Info("exeucte workflow")
 	we, err := c.ExecuteWorkflow(context.Background(), options, dsl.DSLWorkflow, args)
 	if err != nil {
 		slog.Error("unable to complete Workflow", "err", err)

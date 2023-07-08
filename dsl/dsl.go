@@ -15,7 +15,11 @@ import (
 const DSLWorkflowTaskQueue = "DSL_WORKFLOW_TASK_QUEUE"
 
 type DSLWorkflowArgs struct {
-	ExpenseId string
+	Id         string
+	Type       string
+	EntityType string
+	EntityId   string
+	DSLStr     string
 }
 
 func ParseWorkflow(filePath string) (*model.Workflow, error) {
