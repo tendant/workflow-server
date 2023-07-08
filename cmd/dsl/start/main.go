@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/rs/zerolog/log"
 	"github.com/tendant/workflow-server/dsl"
 	"go.temporal.io/sdk/client"
+	"golang.org/x/exp/slog"
 )
 
 func main() {
@@ -14,7 +13,7 @@ func main() {
 	// Create the client object just once per process
 	c, err := client.Dial(client.Options{})
 	if err != nil {
-		log.Fatal().Err(err).Msg("unable to create Temporal client")
+		slog.Error("unable to create Temporal client", "err", err)
 	}
 	defer c.Close()
 
@@ -22,31 +21,30 @@ func main() {
 		ID:        "dsl-workflow",
 		TaskQueue: dsl.DSLWorkflowTaskQueue,
 	}
-	log.Info().Msg("workflow options:")
+	slog.Info("workflow options:")
 
 	// Start the Workflow
 	args := dsl.DSLWorkflowArgs{
 		ExpenseId: "first",
 	}
-	log.Info().Msg("exeucte workflow")
+	slog.Info("exeucte workflow")
 	we, err := c.ExecuteWorkflow(context.Background(), options, dsl.DSLWorkflow, args)
 	if err != nil {
-		log.Fatal().Err(err).Msg("unable to complete Workflow")
+		slog.Error("unable to complete Workflow", "err", err)
 	}
-	log.Info().Str("workflowID", we.GetID()).Str("runID", we.GetRunID()).Msg("Started Workflow")
+	slog.Info("Started Workflow", "workflowID", we.GetID(), "runID", we.GetRunID())
 
 	// Get the results
 	var wf string
-	log.Info().Msg("Getting workflow result...")
+	slog.Info("Getting workflow result...")
 	err = we.Get(context.Background(), &wf)
 	if err != nil {
-		log.Fatal().Err(err).Msg("unable to get Workflow result")
+		slog.Error("unable to get Workflow result", "err", err)
 	}
 
 	printResults(wf, we.GetID(), we.GetRunID())
 }
 
 func printResults(result string, workflowID, runID string) {
-	fmt.Printf("\nWorkflowID: %s RunID: %s\n", workflowID, runID)
-	fmt.Printf("\n%s\n\n", result)
+	slog.Info("Workflow Results:", "result", result, "workflowID", workflowID, "runID", runID)
 }

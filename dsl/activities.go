@@ -3,13 +3,13 @@ package dsl
 import (
 	"context"
 
-	"github.com/rs/zerolog/log"
 	"go.temporal.io/sdk/activity"
+	"golang.org/x/exp/slog"
 )
 
 func ApprovalActivity(ctx context.Context, args DSLWorkflowArgs) (string, error) {
 	activityInfo := activity.GetInfo(ctx)
-	log.Debug().Any("task_token", activityInfo.TaskToken).Msg("task_token:")
+	slog.Debug("task_token:", "task_token", activityInfo.TaskToken)
 	// ErrActivityResultPending is returned from activity's execution to indicate the activity is not completed when it returns.
 	// activity will be completed asynchronously when Client.CompleteActivity() is called.
 	return "", activity.ErrResultPending

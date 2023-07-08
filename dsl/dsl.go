@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/serverlessworkflow/sdk-go/v2/model"
 	"github.com/serverlessworkflow/sdk-go/v2/parser"
 	"go.temporal.io/sdk/workflow"
+	"golang.org/x/exp/slog"
 )
 
 const DSLWorkflowTaskQueue = "DSL_WORKFLOW_TASK_QUEUE"
@@ -53,20 +53,20 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 
 	var result string
 	// Step 1
-	log.Info().Msg("Step 11111")
+	slog.Info("Step 11111")
 	err := workflow.ExecuteActivity(ctx, ApprovalActivity, args).Get(ctx, &result)
 	if err != nil {
 		return "", err
 	}
 	switch result {
 	case "Declined":
-		log.Info().Msgf("Workflow completed. ExpenseStatus: %s.\n", result)
+		slog.Info("Workflow completed.", "ExpenseStatus", result)
 		return "", nil
 	case "Approved":
-		log.Info().Msgf("Continue Workflow. ExpenseStatus: %s.\n", result)
+		slog.Info("Continue Workflow.", "ExpenseStatus", result)
 	default:
 		// Error
-		log.Warn().Msgf("Incorrect status of ApprovelActivity: %s.\n", result)
+		slog.Warn("Incorrect status of", "ApprovelActivity", result)
 	}
 
 	// step, wait for the expense report to be approved (or rejected)
@@ -76,20 +76,20 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	ctx2 := workflow.WithActivityOptions(ctx, ao)
 	var status string
 	// Step 2
-	log.Info().Msg("Step 2222")
+	slog.Info("Step 2222")
 	err = workflow.ExecuteActivity(ctx2, ApprovalActivity, args).Get(ctx2, &status)
 	if err != nil {
 		return "", err
 	}
 	switch status {
 	case "Declined":
-		log.Info().Msgf("Workflow completed. ExpenseStatus: %s.\n", status)
+		slog.Info("Workflow completed.", "ExpenseStatus", status)
 		return "", nil
 	case "Approved":
-		log.Info().Msgf("Continue Workflow. ExpenseStatus: %s.\n", status)
+		slog.Info("Continue Workflow.", "ExpenseStatus", status)
 	default:
 		// Error
-		log.Warn().Msgf("Incorrect status of ApprovelActivity: %s.\n", status)
+		slog.Warn("Incorrect status of ApprovelActivity.", "ApprovelActivity", status)
 	}
 
 	return "Completed", nil

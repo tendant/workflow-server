@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/rs/zerolog/log"
 	"github.com/tendant/workflow-server/dsl"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
+	"golang.org/x/exp/slog"
 )
 
 func main() {
 
-	log.Debug().Msg("Starting worker...")
+	slog.Debug("Starting worker...")
 	// workflow, err := dsl.ParseWorkflow("./expense.yaml")
 	// if err != nil {
 	// 	log.Fatal().Err(err).Msg("Failed parsing workflow")
@@ -21,7 +21,7 @@ func main() {
 	c, err := client.Dial(client.Options{})
 
 	if err != nil {
-		log.Fatal().AnErr("err", err).Msg("unable to create Temporal client for woker")
+		slog.Error("unable to create Temporal client for woker", "err", err)
 	}
 	defer c.Close()
 
@@ -32,7 +32,7 @@ func main() {
 	// start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())
 	if err != nil {
-		log.Fatal().AnErr("err", err).Msg("Unable to start Worker")
+		slog.Error("Unable to start Worker", "err", err)
 	}
 
 }
