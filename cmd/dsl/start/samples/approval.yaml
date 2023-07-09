@@ -1,0 +1,18 @@
+id: approval-demo1
+name: Transaction Approval Workflow
+version: '1.0'
+specVersion: '0.8'
+timeouts:
+  workflowExecTimeout:
+    duration: PT10M
+  actionExecTimeout: PT1M
+autoRetries: true
+start: TransactionApproval1
+states:
+  - name: TransactionApproval1
+    type: operation
+    actionMode: sequential
+    actions:
+      - refName: TransactionApproval
+        functionRef: TransactionApprovalFunc
+    end: true

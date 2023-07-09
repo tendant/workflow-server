@@ -19,14 +19,14 @@ func main() {
 	}
 	defer c.Close()
 
-	filename := "./samples/bankingtransactions.yaml"
+	filename := "./samples/approval.yaml"
 	dslStr, err := os.ReadFile(filename)
 	if err != nil {
 		slog.Error("Failed reading workflow DSL from file.", "file", filename)
 		os.Exit(-1)
 	}
 	wfType := "tx"
-	entityType := "bankingtransaction"
+	entityType := "approval"
 	entityId := "1"
 	id := fmt.Sprintf("%s-%s-%s", wfType, entityType, entityId)
 	args := dsl.DSLWorkflowArgs{

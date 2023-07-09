@@ -54,6 +54,14 @@ func GetStartingWorkflowState(workflow *model.Workflow) (model.State, error) {
 }
 
 func ExecuteDSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *model.Workflow) (string, error) {
+	slog.Info("Start executing with state name", "stateName", dslWorkflow.Start.StateName)
+	startStateName := dslWorkflow.Start.StateName
+	state, err := GetWorkflowStateByName(startStateName, dslWorkflow)
+	if err != nil {
+		slog.Error("Failed getting workflow state by name", "startStateName", startStateName)
+		return "", err
+	}
+	slog.Info("Start state type", "stateType", state.Type)
 	return "Completed", nil
 }
 
