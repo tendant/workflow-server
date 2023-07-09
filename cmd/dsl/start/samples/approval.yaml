@@ -11,8 +11,9 @@ start: TransactionApproval1
 states:
   - name: TransactionApproval1
     type: operation
-    actionMode: sequential
+    actionMode:  sequential
     actions:
-      - refName: TransactionApproval
-        functionRef: TransactionApprovalFunc
+      - functionRef:
+          refName: TransactionApproval
+
     end: true

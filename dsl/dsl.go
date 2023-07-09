@@ -61,7 +61,12 @@ func ExecuteDSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow 
 		slog.Error("Failed getting workflow state by name", "startStateName", startStateName)
 		return "", err
 	}
-	slog.Info("Start state type", "stateType", state.Type)
+	slog.Info("State Type", "stateType", state.Type)
+	slog.Info("State ActionMode", "actionMode", state.ActionMode)
+	slog.Info("State Actions", "actions", state.OperationState.Actions)
+	for i, v := range state.OperationState.Actions {
+		slog.Info("Runing Action", "i", i, "action", v.FunctionRef.RefName)
+	}
 	return "Completed", nil
 }
 
