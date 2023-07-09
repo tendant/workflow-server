@@ -1,2 +1,2 @@
 run:
-	arelo -t . -t ../../.. -p '**/*.go' -- go run .
+	arelo -t . -t ../../.. -p '**/*.go' -i '**/.*' -i '**/*_test.go' -- go run .
