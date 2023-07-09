@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/tendant/workflow-server/dsl"
+	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 	"golang.org/x/exp/slog"
@@ -27,7 +28,10 @@ func main() {
 
 	w := worker.New(c, dsl.DSLWorkflowTaskQueue, worker.Options{})
 	w.RegisterWorkflow(dsl.DSLWorkflow)
-	w.RegisterActivity(dsl.ApprovalActivity)
+	regActivityOptions := activity.RegisterOptions{
+		Name: "TransactionApprovalActivity",
+	}
+	w.RegisterActivityWithOptions(dsl.TransactionApprovalActivity, regActivityOptions)
 
 	// start listening to the Task Queue
 	err = w.Run(worker.InterruptCh())

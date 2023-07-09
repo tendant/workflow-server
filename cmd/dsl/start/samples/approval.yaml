@@ -13,7 +13,7 @@ states:
     type: operation
     actionMode:  sequential
     actions:
-      - functionRef:
-          refName: TransactionApproval
-
+      - name: Manager Approval
+        functionRef:
+          refName: TransactionApprovalActivity
     end: true
