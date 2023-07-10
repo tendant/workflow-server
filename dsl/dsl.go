@@ -70,12 +70,21 @@ func ExecuteDSLState(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *mo
 	slog.Info("State Type", "stateType", state.Type)
 	slog.Info("State ActionMode", "actionMode", state.ActionMode)
 	slog.Info("State Actions", "actions", state.OperationState.Actions)
+	stateResult := ""
 	for i, v := range state.OperationState.Actions {
 		slog.Info("Executing Action", "i", i)
-		ExecuteDSLAction(ctx, args, v)
+		actionResult, err := ExecuteDSLAction(ctx, args, v)
+		if err != nil {
+			slog.Error("Failed Executing Action", "err", err)
+			return "", err
+		} else {
+			if v.ActionDataFilter.UseResults {
+				stateResult = actionResult
+			}
+		}
 	}
-	if state.End != nil {
-		return "Completed", nil
+	if state.End != nil || stateResult == "Declined" {
+		return stateResult, nil
 	} else {
 		nextStateName := state.Transition.NextState
 		nextState, err := GetWorkflowStateByName(nextStateName, dslWorkflow)
