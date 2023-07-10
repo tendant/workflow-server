@@ -16,4 +16,12 @@ states:
       - name: Manager Approval
         functionRef:
           refName: TransactionApprovalActivity
+    transition: TransactionApproval2
+  - name: TransactionApproval2
+    type: operation
+    actionMode:  sequential
+    actions:
+      - name: Manager Approval 2
+        functionRef:
+          refName: TransactionApprovalActivity
     end: true

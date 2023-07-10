@@ -25,8 +25,8 @@ func main() {
 	// err = workflowClient.CompleteActivity(context.Background(), token, state, nil)
 	namespace := "default"
 	workflowId := "tx-approval-1"
-	runId := "934b0405-8967-4e95-933c-e85a62af16d5"
-	activityId := "5"
+	runId := "a92b2824-0202-4089-b6c2-78461e355b8e"
+	activityId := "17"
 	err = workflowClient.CompleteActivityByID(context.Background(), namespace, workflowId, runId, activityId, state, nil)
 	slog.Debug("Ccomplete activity", "state", state)
 	if err != nil {

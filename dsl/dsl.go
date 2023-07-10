@@ -63,10 +63,10 @@ func ExecuteDSLAction(ctx workflow.Context, args DSLWorkflowArgs, action model.A
 	if err != nil {
 		return "", err
 	}
-	return "Completed", nil
+	return activityResult, nil
 }
 
-func ExecuteDSLState(ctx workflow.Context, args DSLWorkflowArgs, state model.State) (string, error) {
+func ExecuteDSLState(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *model.Workflow, state model.State) (string, error) {
 	slog.Info("State Type", "stateType", state.Type)
 	slog.Info("State ActionMode", "actionMode", state.ActionMode)
 	slog.Info("State Actions", "actions", state.OperationState.Actions)
@@ -74,8 +74,17 @@ func ExecuteDSLState(ctx workflow.Context, args DSLWorkflowArgs, state model.Sta
 		slog.Info("Executing Action", "i", i)
 		ExecuteDSLAction(ctx, args, v)
 	}
-	return "Completed", nil
-
+	if state.End != nil {
+		return "Completed", nil
+	} else {
+		nextStateName := state.Transition.NextState
+		nextState, err := GetWorkflowStateByName(nextStateName, dslWorkflow)
+		if err != nil {
+			slog.Error("Failed get workflow state by name", "nextState", nextStateName)
+			return "", err
+		}
+		return ExecuteDSLState(ctx, args, dslWorkflow, nextState)
+	}
 }
 
 func ExecuteDSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *model.Workflow) (string, error) {
@@ -86,7 +95,7 @@ func ExecuteDSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow 
 		slog.Error("Failed getting workflow state by name", "startStateName", startStateName)
 		return "", err
 	}
-	return ExecuteDSLState(ctx, args, state)
+	return ExecuteDSLState(ctx, args, dslWorkflow, state)
 }
 
 func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
@@ -99,7 +108,7 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	slog.Info("Parsing Workflow DSL")
 	dslWorkflow, err := ParseWorkflowDSL(args.DSLStr)
 	if err != nil {
-		slog.Error("Failed Parse Workflow DSL", "DSLStr", args.DSLStr)
+		slog.Error("Failed Parse Workflow DSL", "DSLStr", args.DSLStr, "err", err)
 		return "", err
 	}
 
