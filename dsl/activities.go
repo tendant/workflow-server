@@ -18,7 +18,11 @@ func ApprovalActivity(ctx context.Context, args DSLWorkflowArgs) (string, error)
 	// return "", fmt.Errorf("register callback failed status:%s", status)
 }
 
-func TransactionApprovalActivity(ctx context.Context, args DSLWorkflowArgs) (string, error) {
+type TransactionApprovalParams struct {
+	Approver string
+}
+
+func TransactionApprovalActivity(ctx context.Context, params TransactionApprovalParams) (string, error) {
 	activityInfo := activity.GetInfo(ctx)
 	slog.Debug("task_token:", "task_token", activityInfo.TaskToken)
 	// ErrActivityResultPending is returned from activity's execution to indicate the activity is not completed when it returns.

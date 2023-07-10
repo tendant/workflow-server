@@ -53,12 +53,26 @@ func GetStartingWorkflowState(workflow *model.Workflow) (model.State, error) {
 	return GetWorkflowStateByName(start, workflow)
 }
 
+func ExecuteDSLAction(ctx workflow.Context, args DSLWorkflowArgs, action model.Action) (string, error) {
+	slog.Info("Runing Action", action.Name, "functionRef", action.FunctionRef.RefName)
+	var activityResult string
+	params := TransactionApprovalParams{
+		Approver: "admin",
+	}
+	err := workflow.ExecuteActivity(ctx, action.FunctionRef.RefName, params).Get(ctx, &activityResult)
+	if err != nil {
+		return "", err
+	}
+	return "Completed", nil
+}
+
 func ExecuteDSLState(ctx workflow.Context, args DSLWorkflowArgs, state model.State) (string, error) {
 	slog.Info("State Type", "stateType", state.Type)
 	slog.Info("State ActionMode", "actionMode", state.ActionMode)
 	slog.Info("State Actions", "actions", state.OperationState.Actions)
 	for i, v := range state.OperationState.Actions {
-		slog.Info("Runing Action", "i", i, "action", v.Name, "functionRef", v.FunctionRef.RefName)
+		slog.Info("Executing Action", "i", i)
+		ExecuteDSLAction(ctx, args, v)
 	}
 	return "Completed", nil
 

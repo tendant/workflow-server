@@ -24,9 +24,9 @@ func main() {
 	slog.Debug("Trying to complete activity")
 	// err = workflowClient.CompleteActivity(context.Background(), token, state, nil)
 	namespace := "default"
-	workflowId := "dsl-workflow"
-	runId := "0b32fc81-2d78-4bec-beb1-f88b9d5d4c0d"
-	activityId := "11"
+	workflowId := "tx-approval-1"
+	runId := "934b0405-8967-4e95-933c-e85a62af16d5"
+	activityId := "5"
 	err = workflowClient.CompleteActivityByID(context.Background(), namespace, workflowId, runId, activityId, state, nil)
 	slog.Debug("Ccomplete activity", "state", state)
 	if err != nil {
