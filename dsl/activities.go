@@ -24,6 +24,7 @@ type TransactionApprovalParams struct {
 
 func TransactionApprovalActivity(ctx context.Context, params TransactionApprovalParams) (string, error) {
 	activityInfo := activity.GetInfo(ctx)
+	// FIXME: Send RunID and activityID to external system, so that external system can call Temporal API to complete the Activity
 	slog.Info("activity info:", "activity RunID", activityInfo.WorkflowExecution.RunID, "activityId", activityInfo.ActivityID)
 
 	// ErrActivityResultPending is returned from activity's execution to indicate the activity is not completed when it returns.

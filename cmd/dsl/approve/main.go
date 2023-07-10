@@ -20,7 +20,8 @@ func main() {
 
 	base64Decoded, _ := base64.StdEncoding.DecodeString("CiQ3YTFkNGUyNy0xMzA5LTQ5OTAtYThmMC1jMTNiY2ZiMzkwNDASDGRzbC13b3JrZmxvdxokOTllZDY2MjktYmU5MS00YjJiLThmZmEtNTk3ZTBhZGZkMTdmIAsoATICMTFCEEFwcHJvdmFsQWN0aXZpdHlKCAgBEPGCQBgB")
 	token := []byte(base64Decoded)
-	state := "Approved"
+	// state := "Approved"
+	state := "Declined"
 	slog.Debug("Trying to complete activity")
 	// err = workflowClient.CompleteActivity(context.Background(), token, state, nil)
 	namespace := "default"
