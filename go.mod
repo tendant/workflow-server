@@ -17,6 +17,8 @@ require (
 	github.com/slok/go-http-metrics v0.10.0
 	github.com/stretchr/testify v1.8.3
 	go.temporal.io/sdk v1.23.0
+	go.uber.org/zap v1.10.0
+	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 )
 
 require (
@@ -53,8 +55,8 @@ require (
 	github.com/stretchr/objx v0.5.0 // indirect
 	go.temporal.io/api v1.21.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20220826181053-bd7e27e6170d // indirect
-	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
