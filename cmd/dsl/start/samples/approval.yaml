@@ -5,7 +5,7 @@ specVersion: '0.8'
 timeouts:
   workflowExecTimeout:
     duration: PT10M
-  actionExecTimeout: PT1M
+  actionExecTimeout: PT3M
 autoRetries: true
 start: TransactionApproval1
 states:
