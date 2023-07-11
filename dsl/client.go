@@ -15,12 +15,12 @@ type WorkflowClient struct {
 }
 
 type WorkflowRunAct struct {
-	Namespace  string
-	WorkflowId string
-	RunId      string
-	ActivityId string
-	State      string
-	Err        error
+	Namespace  string `json:"namespace,omitempty"`
+	WorkflowId string `json:"workflowID,omitempty"`
+	RunId      string `json:"runID,omitempty"`
+	ActivityId string `json:"activityID,omitempty"`
+	State      string `json:"state,omitempty"`
+	Err        error  `json:"err,omitempty"`
 }
 
 func NewWorkflowClient() (*WorkflowClient, error) {

@@ -13,7 +13,7 @@ func Routes(r *chi.Mux, handle Handle) {
 			// FIXME: get transaction current workflow state approvers
 			r.With(httpin.NewInput(TransactionGetInput{})).Get("/transactions/{txnid}", handle.GetTransaction)
 			// DONE: Start workflow POST /transactions/{txid}, action Start
-			// FIXME: approve transaction for given activity id, action Approve or Decline
+			// DONE: approve transaction for given activity id, action Approve or Decline
 			r.With(httpin.NewInput(TransactionPostInput{})).Post("/transactions", handle.TransactionApprovalAction)
 		})
 	})

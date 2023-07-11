@@ -26,9 +26,10 @@ type TransactionGetInput struct {
 }
 
 type TransactionPostBody struct {
-	TransactionId int    `json:"txnID"`
-	Action        string `json:"action"`
-	Filename      string `json:"filename"`
+	TransactionId int                `json:"txnID"`
+	Action        string             `json:"action"`
+	Filename      string             `json:"filename,omitempty"`
+	Activity      dsl.WorkflowRunAct `json:"activity,omitempty"`
 }
 
 type TransactionPostInput struct {
@@ -36,8 +37,8 @@ type TransactionPostInput struct {
 }
 
 type TransactionPostResponseStart struct {
-	WorkflowID    string `json:"workflow_id"`
-	WorkflowRunID string `json:"workflow_run_id"`
+	WorkflowID    string `json:"workflowID"`
+	WorkflowRunID string `json:"runID"`
 }
 
 func (h Handle) Hello(w http.ResponseWriter, r *http.Request) {
@@ -107,6 +108,38 @@ func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request
 			WorkflowID:    weID,
 			WorkflowRunID: weRunID,
 		})
+	case "approve", "decline":
+		runact := body.Payload.Activity
+		h.Slog.Info("Trying to complete activity", "action", action, "activity", runact)
+		namespace := runact.Namespace // "default"
+		if namespace == "" {
+			namespace = "default"
+		}
+		workflowId := runact.WorkflowId // "dsl-workflow"
+		if workflowId == "" {
+			workflowId = id
+		}
+		runId := runact.RunId           // "0b32fc81-2d78-4bec-beb1-f88b9d5d4c0d"
+		activityId := runact.ActivityId // "11"
+		state := runact.State           // "Approved"
+		if state == "" {
+			switch strings.ToLower(action) {
+			case "approve":
+				state = "Approved"
+			case "decline":
+				state = "Declined"
+			}
+		}
+		err := runact.Err
+		ctx := context.Background()
+		err = h.Client.CompleteActivityByID(ctx, namespace, workflowId, runId, activityId, state, err)
+		h.Slog.Info("Complete activity")
+		if err != nil {
+			h.Slog.Error("Failed to complete activity", "err", err)
+			http.Error(w, "unable to complete activity", http.StatusInternalServerError)
+			return
+		}
+		render.PlainText(w, r, http.StatusText(http.StatusOK))
 	default:
 		h.Slog.Warn("WIP", "action", action)
 		render.PlainText(w, r, http.StatusText(http.StatusOK))
