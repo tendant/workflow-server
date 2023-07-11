@@ -29,6 +29,7 @@ type TransactionPostBody struct {
 	TransactionId int                `json:"txnID"`
 	Action        string             `json:"action"`
 	Filename      string             `json:"filename,omitempty"`
+	Approver      string             `json:"approver,omitempty"`
 	Activity      dsl.WorkflowRunAct `json:"activity,omitempty"`
 }
 
@@ -108,6 +109,19 @@ func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request
 			WorkflowID:    weID,
 			WorkflowRunID: weRunID,
 		})
+	case "register":
+		runact := body.Payload.Activity
+		h.Slog.Info("Trying to register activity", "action", action, "activity", runact)
+		namespace := runact.Namespace
+		if namespace == "" {
+			runact.Namespace = "default"
+		}
+		workflowId := runact.WorkflowId
+		if workflowId == "" {
+			runact.WorkflowId = id
+		}
+		// FIXME: persist activityInfo
+		render.JSON(w, r, body.Payload)
 	case "approve", "decline":
 		runact := body.Payload.Activity
 		h.Slog.Info("Trying to complete activity", "action", action, "activity", runact)
