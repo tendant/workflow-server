@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/cors v1.2.1
 	github.com/go-chi/httplog v0.3.0
 	github.com/go-chi/render v1.0.2
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/pborman/uuid v1.2.1
 	github.com/prometheus/client_golang v1.15.1
