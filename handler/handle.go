@@ -63,13 +63,6 @@ func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	filename := body.Payload.Filename
-	dslStr, err := h.Ef.ReadFile(fmt.Sprintf("static/%s", filename))
-	if err != nil {
-		h.Slog.Error("Failed reading workflow DSL from file", "file", filename)
-		http.Error(w, "invalid filename", http.StatusBadRequest)
-		return
-	}
 	wfType := "tx"
 	entityType := "approval"
 	entityId := strconv.FormatInt(int64(txnID), 10)
@@ -77,6 +70,13 @@ func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request
 
 	switch strings.ToLower(action) {
 	case "start":
+		filename := body.Payload.Filename
+		dslStr, err := h.Ef.ReadFile(fmt.Sprintf("static/%s", filename))
+		if err != nil {
+			h.Slog.Error("Failed reading workflow DSL from file", "file", filename)
+			http.Error(w, "invalid filename", http.StatusBadRequest)
+			return
+		}
 		args := dsl.DSLWorkflowArgs{
 			Id:         id,
 			Type:       wfType,
@@ -92,7 +92,8 @@ func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request
 		}
 		h.Slog.Info("Workflow options:", "options", options)
 
-		we, err := h.Client.ExecuteWorkflow(context.Background(), options, dsl.DSLWorkflow, args)
+		ctx := context.Background()
+		we, err := h.Client.ExecuteWorkflow(ctx, options, dsl.DSLWorkflow, args)
 		if err != nil {
 			h.Slog.Error("Failed to execute Workflow", "err", err)
 			http.Error(w, "unable to execute Workflow", http.StatusInternalServerError)
