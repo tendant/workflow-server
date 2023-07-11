@@ -5,6 +5,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
 )
 
@@ -29,10 +30,36 @@ func NewWorkflowClient() (*WorkflowClient, error) {
 	})
 	log := log.Logger
 	if err != nil {
-		log.Err(err).Msg("Failed to dial Temporal server")
+		log.Error().Err(err).Msg("Failed to dial Temporal server")
 		return nil, err
 	}
 	return &WorkflowClient{workflowClient, log}, nil
+}
+
+func (w *WorkflowClient) Close() {
+	w.wfc.Close()
+}
+
+func (w *WorkflowClient) GetWorkflowRunAct(namespace, workflowId string) (WorkflowRunAct, error) {
+	we := w.wfc.GetWorkflow(context.Background(), workflowId, "")
+	runId := we.GetRunID()
+	activityId := activity.GetInfo(context.Background()).ActivityID
+	var state string
+	err := we.Get(context.Background(), &state)
+	if err != nil {
+		w.log.Error().Err(err).Msg("unable to get Workflow result")
+		return WorkflowRunAct{}, err
+	}
+
+	runact := WorkflowRunAct{
+		Namespace:  namespace,
+		WorkflowId: workflowId,
+		RunId:      runId,
+		ActivityId: activityId,
+		State:      state,
+		Err:        nil,
+	}
+	return runact, nil
 }
 
 func (w *WorkflowClient) CompleteActivityByID(runact WorkflowRunAct) error {
