@@ -10,26 +10,22 @@ type Handle struct {
 	Slog *slog.Logger
 }
 
-type ExpenseInput struct {
-	ExpenseId int `in:"path=eid"`
+type TransactionInput struct {
+	TransactionId int `in:"path=txid"`
 }
 
 func (h Handle) Hello(w http.ResponseWriter, r *http.Request) {
 	render.PlainText(w, r, http.StatusText(http.StatusOK))
 }
 
-func (h Handle) ListExpenses(w http.ResponseWriter, r *http.Request) {
+func (h Handle) ListTransactions(w http.ResponseWriter, r *http.Request) {
 	render.PlainText(w, r, http.StatusText(http.StatusOK))
 }
 
-func (h Handle) GetExpense(w http.ResponseWriter, r *http.Request) {
+func (h Handle) GetTransaction(w http.ResponseWriter, r *http.Request) {
 	render.PlainText(w, r, http.StatusText(http.StatusOK))
 }
 
-func (h Handle) ApproveExpense(w http.ResponseWriter, r *http.Request) {
-	render.PlainText(w, r, http.StatusText(http.StatusOK))
-}
-
-func (h Handle) DeclineExpense(w http.ResponseWriter, r *http.Request) {
+func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request) {
 	render.PlainText(w, r, http.StatusText(http.StatusOK))
 }
