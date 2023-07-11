@@ -19,6 +19,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	zerologl "github.com/rs/zerolog/log"
+	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 
 	metrics "github.com/slok/go-http-metrics/metrics/prometheus"
 	metricsMiddleware "github.com/slok/go-http-metrics/middleware"
@@ -28,7 +30,9 @@ import (
 type App struct {
 	R      *chi.Mux
 	Config AppConfig
-	Log    zerolog.Logger
+	Log    *zap.Logger
+	Zlog   zerolog.Logger
+	Slog   *slog.Logger
 }
 
 func Default() *App {
@@ -38,11 +42,21 @@ func Default() *App {
 	cleanenv.ReadEnv(&appConfig)
 
 	// Logger
+	jsonHandler := slog.NewJSONHandler(os.Stdout, nil)
+	slogger := slog.New(jsonHandler)
+	// textHandler := slog.NewTextHandler(os.Stdout, nil)
+	// slogger := slog.New(textHandler)
+
+	log, err := zap.NewDevelopment()
+	if err != nil {
+		panic("Can't initialize Zap log!")
+	}
+
 	logger := httplog.NewLogger("httplog", httplog.Options{
 		JSON: false,
 	})
 
-	log := zerologl.With().Str("service", "app")
+	zlog := zerologl.With().Str("service", "app")
 
 	httpin.UseGochiURLParam("path", chi.URLParam)
 
@@ -51,7 +65,9 @@ func Default() *App {
 	app := &App{
 		R:      r,
 		Config: appConfig,
-		Log:    log.Logger(),
+		Log:    log,
+		Zlog:   zlog.Logger(),
+		Slog:   slogger,
 	}
 
 	mdlw := metricsMiddleware.New(metricsMiddleware.Config{
@@ -103,10 +119,10 @@ func (app *App) Run() {
 	addr := fmt.Sprintf("%s:%d", app.Config.Host, app.Config.Port)
 	server := &http.Server{Addr: addr, Handler: app.R}
 
-	app.Log.Info().Msg(fmt.Sprintf("Started server on %s...", addr))
+	app.Slog.Info("Started server.", "addr", addr)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			app.Log.Fatal().AnErr("Failed starting server", err)
+			app.Slog.Error("Failed starting server", "err", err)
 		}
 	}()
 
@@ -114,9 +130,9 @@ func (app *App) Run() {
 	metricsAddr := fmt.Sprintf("%s:%d", app.Config.Metrics.Host, app.Config.Metrics.Port)
 	metricsServer := &http.Server{Addr: metricsAddr, Handler: promhttp.Handler()}
 	go func() {
-		app.Log.Info().Msg(fmt.Sprintf("metrics listening at %s", metricsAddr))
+		app.Slog.Info("metrics listening at", "Addr", metricsAddr)
 		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			app.Log.Fatal().AnErr("Failed starting metrics server", err)
+			app.Slog.Error("Failed starting metrics server", "err", err)
 		}
 	}()
 
@@ -129,12 +145,12 @@ func (app *App) Run() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		app.Log.Error().AnErr("Failed shutdown server", err)
+		app.Slog.Error("Failed shutdown server", "err", err)
 	}
-	app.Log.Info().Msg("Server exited")
+	app.Slog.Info("Server exited")
 	if err := metricsServer.Shutdown(ctx); err != nil {
-		app.Log.Error().AnErr("Failed shutdown metrics server", err)
+		app.Slog.Error("Failed shutdown metrics server", "err", err)
 	}
-	app.Log.Info().Msg("Metrics Server exited")
+	app.Slog.Info("Metrics Server exited")
 
 }
