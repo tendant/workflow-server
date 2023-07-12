@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/httplog"
 	"github.com/go-chi/render"
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/lmittmann/tint"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	zerologl "github.com/rs/zerolog/log"
@@ -42,10 +43,24 @@ func Default() *App {
 	cleanenv.ReadEnv(&appConfig)
 
 	// Logger
-	jsonHandler := slog.NewJSONHandler(os.Stdout, nil)
-	slogger := slog.New(jsonHandler)
-	// textHandler := slog.NewTextHandler(os.Stdout, nil)
-	// slogger := slog.New(textHandler)
+	appEnv := appConfig.AppEnv
+	slog.Info("appEnv", "appEnv", appEnv)
+	var slogger *slog.Logger
+	if appEnv == "dev" {
+		// create a new logger
+		slogger = slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+			AddSource:  true,
+			Level:      slog.LevelDebug,
+			TimeFormat: time.DateTime,
+		}))
+
+		// textHandler := slog.NewTextHandler(os.Stdout, nil)
+		// slogger = slog.New(textHandler)
+	} else {
+		jsonHandler := slog.NewJSONHandler(os.Stdout, nil)
+		slogger = slog.New(jsonHandler)
+	}
+	slog.SetDefault(slogger)
 
 	log, err := zap.NewDevelopment()
 	if err != nil {
