@@ -60,7 +60,19 @@ func (h Handle) GetTransaction(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no activity found", http.StatusNotFound)
 		return
 	}
-	// FIXME: QueryWorkflow?
+	// WIP: QueryWorkflow?
+	resp, err := h.Client.QueryWorkflow(context.Background(), runact.WorkflowId, runact.RunId, dsl.DSLWorkflowQueryType)
+	if err != nil {
+		h.Slog.Error("Unable to query workflow", "err", err)
+	} else {
+		var result string
+		if err := resp.Get(&result); err != nil {
+			h.Slog.Error("Unable to decode query result", "err", err)
+		} else {
+			h.Slog.Info("Received query result", "Result", result)
+			runact.State = result
+		}
+	}
 	render.JSON(w, r, runact)
 }
 
