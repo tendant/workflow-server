@@ -25,6 +25,12 @@ type DSLWorkflowArgs struct {
 	DSLStr     string
 }
 
+type DSLWorkflowStateResult struct {
+	CurrentState string
+	ActionName   string
+	Approver     string
+}
+
 func ParseWorkflow(filePath string) (*model.Workflow, error) {
 	workflow, err := parser.FromFile(filePath)
 	if err != nil {
@@ -56,7 +62,7 @@ func GetStartingWorkflowState(workflow *model.Workflow) (model.State, error) {
 	return GetWorkflowStateByName(start, workflow)
 }
 
-func ExecuteDSLAction(ctx workflow.Context, args DSLWorkflowArgs, action model.Action) (string, error) {
+func ExecuteDSLAction(ctx workflow.Context, args DSLWorkflowArgs, action model.Action, dslState *DSLWorkflowStateResult) (string, error) {
 	slog.Info("Runing Action", "name", action.Name, "functionRef", action.FunctionRef.RefName)
 	var activityResult string
 	params := TransactionApprovalParams{
@@ -66,17 +72,20 @@ func ExecuteDSLAction(ctx workflow.Context, args DSLWorkflowArgs, action model.A
 	if err != nil {
 		return "", err
 	}
+	dslState.ActionName = action.Name
+	dslState.Approver = params.Approver
+	dslState.CurrentState = activityResult
 	return activityResult, nil
 }
 
-func ExecuteDSLState(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *model.Workflow, state model.State) (string, error) {
+func ExecuteDSLState(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *model.Workflow, state model.State, dslState *DSLWorkflowStateResult) (string, error) {
 	slog.Info("State Type", "stateType", state.Type)
 	slog.Info("State ActionMode", "actionMode", state.ActionMode)
 	slog.Info("State Actions", "actions", state.OperationState.Actions)
 	stateResult := ""
 	for i, v := range state.OperationState.Actions {
 		slog.Info("Executing Action", "i", i)
-		actionResult, err := ExecuteDSLAction(ctx, args, v)
+		actionResult, err := ExecuteDSLAction(ctx, args, v, dslState)
 		if err != nil {
 			slog.Error("Failed Executing Action", "err", err)
 			return "", err
@@ -95,19 +104,19 @@ func ExecuteDSLState(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *mo
 			slog.Error("Failed get workflow state by name", "nextState", nextStateName)
 			return "", err
 		}
-		return ExecuteDSLState(ctx, args, dslWorkflow, nextState)
+		return ExecuteDSLState(ctx, args, dslWorkflow, nextState, dslState)
 	}
 }
 
-func ExecuteDSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *model.Workflow) (string, error) {
-	slog.Info("Start executing with state name", "stateName", dslWorkflow.Start.StateName)
+func ExecuteDSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs, dslWorkflow *model.Workflow, dslState *DSLWorkflowStateResult) (string, error) {
+	slog.Info("Start executing with state name", "stateName", dslWorkflow.Start.StateName, "dslState", dslState)
 	startStateName := dslWorkflow.Start.StateName
 	state, err := GetWorkflowStateByName(startStateName, dslWorkflow)
 	if err != nil {
 		slog.Error("Failed getting workflow state by name", "startStateName", startStateName)
 		return "", err
 	}
-	return ExecuteDSLState(ctx, args, dslWorkflow, state)
+	return ExecuteDSLState(ctx, args, dslWorkflow, state, dslState)
 }
 
 func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
@@ -118,9 +127,11 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	ctx = workflow.WithActivityOptions(ctx, options)
 	slog.Info("Setting up Workflow Query Handler", "QueryType", DSLWorkflowQueryType)
 	// setup query handler for query type "state"
-	currentState := "Started" // This could be any serializable struct.
-	err := workflow.SetQueryHandler(ctx, DSLWorkflowQueryType, func() (string, error) {
-		return currentState, nil
+	dslState := DSLWorkflowStateResult{
+		CurrentState: "Started",
+	} // This could be any serializable struct.
+	err := workflow.SetQueryHandler(ctx, DSLWorkflowQueryType, func() (DSLWorkflowStateResult, error) {
+		return dslState, nil
 	})
 	if err != nil {
 		slog.Error("SetQueryHandler failed: ", "err", err)
@@ -135,7 +146,5 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	}
 
 	slog.Info("Start Executing DSL Workflow")
-	currentState, err = ExecuteDSLWorkflow(ctx, args, dslWorkflow)
-	slog.Info("Completed with currentState", "currentState", currentState)
-	return currentState, err
+	return ExecuteDSLWorkflow(ctx, args, dslWorkflow, &dslState)
 }
