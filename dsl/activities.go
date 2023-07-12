@@ -2,7 +2,10 @@ package dsl
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"go.temporal.io/sdk/activity"
@@ -41,8 +44,16 @@ func TransactionApprovalActivity(ctx context.Context, params TransactionApproval
 		RunId:      activityInfo.WorkflowExecution.RunID,
 		ActivityId: activityInfo.ActivityID,
 	}
+	strs := strings.Split(runact.WorkflowId, "-") // FIXME: use util
+	if len(strs) < 3 {
+		return "", errors.New("malformed workflowID")
+	}
+	txnID, err := strconv.Atoi(strs[2])
+	if err != nil {
+		return "", errors.New("malformed workflowID")
+	}
 	body := TransactionPostBody{
-		TransactionId: 1, // FIXME: what txnID
+		TransactionId: txnID,
 		Action:        "register",
 		Approver:      params.Approver,
 		Activity:      runact,
@@ -53,15 +64,15 @@ func TransactionApprovalActivity(ctx context.Context, params TransactionApproval
 		SetBody(body).
 		SetResult(&TransactionPostBody{}). // FIXME: what response struct
 		Post("http://localhost:4000/api/v2/workflow/transactions")
-	if err != nil || resp.StatusCode() != http.StatusOK {
+	if err != nil {
 		return "", err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return "", errors.New("failed to register activity in external system")
 	}
 	slog.Info("registered activity info", "resp", resp)
 
 	// ErrActivityResultPending is returned from activity's execution to indicate the activity is not completed when it returns.
 	// activity will be completed asynchronously when Client.CompleteActivity() is called.
 	return "", activity.ErrResultPending
-	// return "", errors.New("Bad Request")
-	// return "", err
-	// return "", fmt.Errorf("register callback failed status:%s", status)
 }

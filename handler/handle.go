@@ -19,6 +19,7 @@ type Handle struct {
 	Slog   *slog.Logger
 	Client client.Client
 	Ef     embed.FS
+	TxnMap map[int]dsl.WorkflowRunAct
 }
 
 type TransactionGetInput struct {
@@ -68,7 +69,7 @@ func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request
 	wfType := "tx"
 	entityType := "approval"
 	entityId := strconv.FormatInt(int64(txnID), 10)
-	id := fmt.Sprintf("%s-%s-%s", wfType, entityType, entityId)
+	id := fmt.Sprintf("%s-%s-%s", wfType, entityType, entityId) // FIXME: use util
 
 	switch strings.ToLower(action) {
 	case "start":
@@ -121,6 +122,7 @@ func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request
 			runact.WorkflowId = id
 		}
 		// FIXME: persist activityInfo
+		h.TxnMap[txnID] = runact
 		render.JSON(w, r, body.Payload)
 	case "approve", "decline":
 		runact := body.Payload.Activity

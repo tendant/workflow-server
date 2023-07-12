@@ -2,10 +2,12 @@ package main
 
 import (
 	"embed"
+	"os"
+
 	"github.com/tendant/workflow-server/app"
+	"github.com/tendant/workflow-server/dsl"
 	"github.com/tendant/workflow-server/handler"
 	"go.temporal.io/sdk/client"
-	"os"
 )
 
 //go:embed static
@@ -27,6 +29,7 @@ func main() {
 		Slog:   slog,
 		Client: c,
 		Ef:     ef,
+		TxnMap: make(map[int]dsl.WorkflowRunAct),
 	}
 
 	handler.Routes(app.R, handle)
