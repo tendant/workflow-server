@@ -136,5 +136,6 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 
 	slog.Info("Start Executing DSL Workflow")
 	currentState, err = ExecuteDSLWorkflow(ctx, args, dslWorkflow)
+	slog.Info("Completed with currentState", "currentState", currentState)
 	return currentState, err
 }

@@ -61,6 +61,8 @@ func (h Handle) GetTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// WIP: QueryWorkflow?
+	// workflowRun := h.Client.GetWorkflow(context.Background(), runact.WorkflowId, runact.RunId)
+	// workflowRun.Get(ctx context.Context, valuePtr interface{})
 	resp, err := h.Client.QueryWorkflow(context.Background(), runact.WorkflowId, runact.RunId, dsl.DSLWorkflowQueryType)
 	if err != nil {
 		h.Slog.Error("Unable to query workflow", "err", err)
