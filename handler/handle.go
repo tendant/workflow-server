@@ -52,7 +52,16 @@ func (h Handle) ListTransactions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handle) GetTransaction(w http.ResponseWriter, r *http.Request) {
-	render.PlainText(w, r, http.StatusText(http.StatusOK))
+	input := r.Context().Value(httpin.Input).(*TransactionGetInput)
+	h.Slog.Info("Handling GetTransaction", "input", input)
+	txnID := input.TransactionId
+	runact, ok := h.TxnMap[txnID]
+	if !ok {
+		http.Error(w, "no activity found", http.StatusNotFound)
+		return
+	}
+	// FIXME: QueryWorkflow?
+	render.JSON(w, r, runact)
 }
 
 func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request) {
