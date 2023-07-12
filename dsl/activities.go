@@ -59,7 +59,7 @@ func TransactionApprovalActivity(ctx context.Context, params TransactionApproval
 		Activity:      runact,
 	}
 	client := resty.New()
-	slog.Info("register activity info", "body", body)
+	slog.Info("register activity info...", "body", body)
 	resp, err := client.R().
 		SetBody(body).
 		SetResult(&TransactionPostBody{}). // FIXME: what response struct

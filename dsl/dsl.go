@@ -12,7 +12,10 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-const DSLWorkflowTaskQueue = "DSL_WORKFLOW_TASK_QUEUE"
+const (
+	DSLWorkflowTaskQueue = "DSL_WORKFLOW_TASK_QUEUE"
+	DSLWorkflowQueryType = "state"
+)
 
 type DSLWorkflowArgs struct {
 	Id         string
@@ -54,7 +57,7 @@ func GetStartingWorkflowState(workflow *model.Workflow) (model.State, error) {
 }
 
 func ExecuteDSLAction(ctx workflow.Context, args DSLWorkflowArgs, action model.Action) (string, error) {
-	slog.Info("Runing Action", action.Name, "functionRef", action.FunctionRef.RefName)
+	slog.Info("Runing Action", "name", action.Name, "functionRef", action.FunctionRef.RefName)
 	var activityResult string
 	params := TransactionApprovalParams{
 		Approver: "admin",
@@ -113,6 +116,16 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, options)
+	slog.Info("Setting up Workflow Query Handler", "QueryType", DSLWorkflowQueryType)
+	// setup query handler for query type "state"
+	currentState := "Started" // This could be any serializable struct.
+	err := workflow.SetQueryHandler(ctx, DSLWorkflowQueryType, func() (string, error) {
+		return currentState, nil
+	})
+	if err != nil {
+		slog.Error("SetQueryHandler failed: ", "err", err)
+		return "", err
+	}
 
 	slog.Info("Parsing Workflow DSL")
 	dslWorkflow, err := ParseWorkflowDSL(args.DSLStr)
@@ -122,6 +135,6 @@ func DSLWorkflow(ctx workflow.Context, args DSLWorkflowArgs) (string, error) {
 	}
 
 	slog.Info("Start Executing DSL Workflow")
-	return ExecuteDSLWorkflow(ctx, args, dslWorkflow)
-
+	currentState, err = ExecuteDSLWorkflow(ctx, args, dslWorkflow)
+	return currentState, err
 }
