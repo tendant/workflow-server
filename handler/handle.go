@@ -26,6 +26,11 @@ type TransactionGetInput struct {
 	TransactionId int `in:"path=txnid"`
 }
 
+type TransactionGetOutput struct {
+	WorkflowRunAct         dsl.WorkflowRunAct         `json:"workflowRunAct"`
+	DSLWorkflowStateResult dsl.DSLWorkflowStateResult `json:"workflowStateResult,omitempty"`
+}
+
 type TransactionPostBody struct {
 	TransactionId int                `json:"txnID"`
 	Action        string             `json:"action"`
@@ -61,21 +66,22 @@ func (h Handle) GetTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// WIP: QueryWorkflow?
-	// workflowRun := h.Client.GetWorkflow(context.Background(), runact.WorkflowId, runact.RunId)
-	// workflowRun.Get(ctx context.Context, valuePtr interface{})
+	var result dsl.DSLWorkflowStateResult
 	resp, err := h.Client.QueryWorkflow(context.Background(), runact.WorkflowId, runact.RunId, dsl.DSLWorkflowQueryType)
 	if err != nil {
 		h.Slog.Error("Unable to query workflow", "err", err)
 	} else {
-		var result string
 		if err := resp.Get(&result); err != nil {
 			h.Slog.Error("Unable to decode query result", "err", err)
 		} else {
 			h.Slog.Info("Received query result", "Result", result)
-			runact.State = result
+			runact.State = result.CurrentState
 		}
 	}
-	render.JSON(w, r, runact)
+	render.JSON(w, r, TransactionGetOutput{
+		WorkflowRunAct:         runact,
+		DSLWorkflowStateResult: result,
+	})
 }
 
 func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request) {
@@ -174,9 +180,7 @@ func (h Handle) TransactionApprovalAction(w http.ResponseWriter, r *http.Request
 		err = h.Client.CompleteActivityByID(ctx, namespace, workflowId, runId, activityId, state, err)
 		h.Slog.Info("Complete activity")
 		if err != nil {
-			h.Slog.Error("Failed to complete activity", "err", err)
-			http.Error(w, "unable to complete activity", http.StatusInternalServerError)
-			return
+			h.Slog.Warn("Failed to complete activity", "err", err)
 		}
 		render.PlainText(w, r, http.StatusText(http.StatusOK))
 	default:
